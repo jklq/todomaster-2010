@@ -7,6 +7,8 @@ export function useLists() {
     queryKey: ['lists'],
     queryFn: lists.getAll,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    // Only fetch if authenticated
+    enabled: !!localStorage.getItem('token'),
   });
 }
 

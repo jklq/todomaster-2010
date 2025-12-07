@@ -47,7 +47,7 @@ func (h *Handler) registerRoutes() {
 	h.mux.HandleFunc("POST /api/auth/register", h.handleRegister)
 	h.mux.HandleFunc("POST /api/auth/login", h.handleLogin)
 	h.mux.HandleFunc("POST /api/auth/logout", h.requireAuth(h.handleLogout))
-	h.mux.HandleFunc("POST /api/auth/refresh", h.requireAuth(h.handleRefresh))
+	h.mux.HandleFunc("POST /api/auth/refresh", h.handleRefresh)
 
 	// User endpoints (protected)
 	h.mux.HandleFunc("GET /api/user/me", h.requireAuth(h.handleGetMe))

@@ -21,6 +21,7 @@ export function useAuth() {
       auth.login(email, password),
     onSuccess: (response) => {
       localStorage.setItem('token', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
       queryClient.setQueryData(['me'], response.data.user);
     },
   });
@@ -30,6 +31,7 @@ export function useAuth() {
       auth.register(email, password, displayName),
     onSuccess: (response) => {
       localStorage.setItem('token', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
       queryClient.setQueryData(['me'], response.data.user);
     },
   });
@@ -38,6 +40,7 @@ export function useAuth() {
     mutationFn: auth.logout,
     onSettled: () => {
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       queryClient.setQueryData(['me'], null);
       queryClient.clear(); // Clear all data on logout
     },

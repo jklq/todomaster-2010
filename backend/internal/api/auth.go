@@ -139,21 +139,40 @@ func (h *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleRefresh handles token refresh.
-func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(userIDKey).(int64)
+// RefreshRequest is the request body for token refresh.
+type RefreshRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
 
-	user, err := h.db.GetUserByID(r.Context(), userID)
-	if err != nil {
-		h.errorResponse(w, http.StatusUnauthorized, "invalid user")
+// handleRefresh handles token refresh using the refresh token.
+func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+	if err := h.decodeJSON(r, &req); err != nil {
+		h.errorResponse(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	// Delete old session
-	oldToken := getAuthToken(r)
-	if oldToken != "" {
-		_ = h.db.DeleteSession(r.Context(), oldToken)
+	if req.RefreshToken == "" {
+		h.errorResponse(w, http.StatusBadRequest, "refresh token is required")
+		return
 	}
+
+	// Validate refresh token against database
+	session, err := h.db.GetSessionByToken(r.Context(), req.RefreshToken)
+	if err != nil {
+		h.errorResponse(w, http.StatusUnauthorized, "invalid or expired refresh token")
+		return
+	}
+
+	// Get user
+	user, err := h.db.GetUserByID(r.Context(), session.UserID)
+	if err != nil {
+		h.errorResponse(w, http.StatusUnauthorized, "user not found")
+		return
+	}
+
+	// Delete old session (rotating refresh tokens for security)
+	_ = h.db.DeleteSession(r.Context(), req.RefreshToken)
 
 	// Generate new tokens
 	authResp, err := h.generateAuthResponse(r.Context(), user)

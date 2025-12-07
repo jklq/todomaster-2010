@@ -7,6 +7,8 @@ export function useTasks() {
     queryKey: ['tasks'],
     queryFn: tasks.getAll,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    // Only fetch if authenticated
+    enabled: !!localStorage.getItem('token'),
   });
 }
 
