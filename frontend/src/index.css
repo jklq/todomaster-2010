@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* Base reset styles */
+body {
+  margin: 0;
+  min-width: 320px;
+}

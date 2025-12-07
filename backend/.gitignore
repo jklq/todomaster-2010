@@ -1,0 +1,25 @@
+# Build artifacts
+bin/
+tmp/
+
+# Database
+data/
+*.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test coverage
+coverage.out
+coverage.html
+
+# Air logs
+build-errors.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
