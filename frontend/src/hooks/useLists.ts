@@ -19,8 +19,9 @@ export function useCreateList() {
       await queryClient.cancelQueries({ queryKey: ['lists'] });
       const previousLists = queryClient.getQueryData<List[]>(['lists']);
 
+      const tempId = Date.now();
       const optimisticList: List = {
-        id: Date.now(), // Temporary ID
+        id: tempId, // Temporary ID
         userId: 0,
         title,
         createdAt: new Date().toISOString(),
@@ -33,15 +34,22 @@ export function useCreateList() {
         queryClient.setQueryData<List[]>(['lists'], [optimisticList]);
       }
 
-      return { previousLists };
+      return { previousLists, tempId };
+    },
+    onSuccess: (newList, _variables, context) => {
+      // Replace the optimistic list with the real one from the server
+      const currentLists = queryClient.getQueryData<List[]>(['lists']);
+      if (currentLists && context?.tempId) {
+        queryClient.setQueryData<List[]>(
+          ['lists'],
+          currentLists.map(list => list.id === context.tempId ? newList : list)
+        );
+      }
     },
     onError: (_err, _newTodo, context) => {
       if (context?.previousLists) {
         queryClient.setQueryData<List[]>(['lists'], context.previousLists);
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['lists'] });
     },
   });
 }

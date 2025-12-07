@@ -31,8 +31,9 @@ export function useCreateTask() {
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
       const previousTasks = queryClient.getQueryData<Task[]>(['tasks']);
 
+      const tempId = Date.now();
       const optimisticTask: Task = {
-        id: Date.now(), // Temporary ID
+        id: tempId, // Temporary ID
         userId: 0,
         text,
         completed: filter === 'completed',
@@ -52,15 +53,22 @@ export function useCreateTask() {
         queryClient.setQueryData<Task[]>(['tasks'], [optimisticTask]);
       }
 
-      return { previousTasks };
+      return { previousTasks, tempId };
+    },
+    onSuccess: (newTask, _variables, context) => {
+      // Replace the optimistic task with the real one from the server
+      const currentTasks = queryClient.getQueryData<Task[]>(['tasks']);
+      if (currentTasks && context?.tempId) {
+        queryClient.setQueryData<Task[]>(
+          ['tasks'],
+          currentTasks.map(task => task.id === context.tempId ? newTask : task)
+        );
+      }
     },
     onError: (_err, _newTodo, context) => {
       if (context?.previousTasks) {
         queryClient.setQueryData<Task[]>(['tasks'], context.previousTasks);
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 }
