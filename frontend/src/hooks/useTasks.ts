@@ -56,13 +56,15 @@ export function useCreateTask() {
       return { previousTasks, tempId };
     },
     onSuccess: (newTask, _variables, context) => {
-      // Replace the optimistic task with the real one from the server
+      // Remove the optimistic task and add the real one
+      // This handles the race with WebSocket by filtering out both temp and real IDs
       const currentTasks = queryClient.getQueryData<Task[]>(['tasks']);
       if (currentTasks && context?.tempId) {
-        queryClient.setQueryData<Task[]>(
-          ['tasks'],
-          currentTasks.map(task => task.id === context.tempId ? newTask : task)
+        // Filter out both the temp item AND any duplicate real item (from WebSocket)
+        const filtered = currentTasks.filter(
+          task => task.id !== context.tempId && task.id !== newTask.id
         );
+        queryClient.setQueryData<Task[]>(['tasks'], [...filtered, newTask]);
       }
     },
     onError: (_err, _newTodo, context) => {

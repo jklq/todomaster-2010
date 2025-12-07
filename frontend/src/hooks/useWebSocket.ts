@@ -109,9 +109,13 @@ export function useWebSocket() {
     switch (event.type) {
       case 'task_created': {
         const newTask = event.payload as TaskPayload;
-        // Check if task already exists (from optimistic update)
-        if (!tasks.some(t => t.id === newTask.id)) {
-          queryClient.setQueryData<Task[]>(['tasks'], [...tasks, newTask]);
+        // Check if task already exists (with real ID)
+        // Also filter out any optimistic items with temp IDs (timestamp-based, > 1 trillion)
+        const existingWithRealId = tasks.some(t => t.id === newTask.id);
+        if (!existingWithRealId) {
+          // Filter out potential optimistic duplicates (temp IDs are timestamps > 1 trillion)
+          const filtered = tasks.filter(t => t.id < 1000000000000 || t.id === newTask.id);
+          queryClient.setQueryData<Task[]>(['tasks'], [...filtered, newTask]);
         }
         break;
       }
@@ -186,8 +190,14 @@ export function useWebSocket() {
       case 'list_created': {
         const newList = event.payload as ListPayload;
         const lists = queryClient.getQueryData<List[]>(['lists']);
-        if (lists && !lists.some(l => l.id === newList.id)) {
-          queryClient.setQueryData<List[]>(['lists'], [...lists, newList]);
+        if (lists) {
+          // Check if list already exists (with real ID)
+          const existingWithRealId = lists.some(l => l.id === newList.id);
+          if (!existingWithRealId) {
+            // Filter out potential optimistic duplicates (temp IDs are timestamps > 1 trillion)
+            const filtered = lists.filter(l => l.id < 1000000000000 || l.id === newList.id);
+            queryClient.setQueryData<List[]>(['lists'], [...filtered, newList]);
+          }
         }
         break;
       }

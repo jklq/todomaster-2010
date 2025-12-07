@@ -37,13 +37,15 @@ export function useCreateList() {
       return { previousLists, tempId };
     },
     onSuccess: (newList, _variables, context) => {
-      // Replace the optimistic list with the real one from the server
+      // Remove the optimistic list and add the real one
+      // This handles the race with WebSocket by filtering out both temp and real IDs
       const currentLists = queryClient.getQueryData<List[]>(['lists']);
       if (currentLists && context?.tempId) {
-        queryClient.setQueryData<List[]>(
-          ['lists'],
-          currentLists.map(list => list.id === context.tempId ? newList : list)
+        // Filter out both the temp item AND any duplicate real item (from WebSocket)
+        const filtered = currentLists.filter(
+          list => list.id !== context.tempId && list.id !== newList.id
         );
+        queryClient.setQueryData<List[]>(['lists'], [...filtered, newList]);
       }
     },
     onError: (_err, _newTodo, context) => {
