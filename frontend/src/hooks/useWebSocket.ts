@@ -2,7 +2,15 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Task, Subtask, List } from '../types';
 
-const WS_URL = 'ws://localhost:8080/ws';
+// Construct WebSocket URL from API URL environment variable
+const getWebSocketUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+  // Convert http:// to ws:// and https:// to wss://
+  const wsUrl = apiUrl.replace(/^http/, 'ws');
+  return `${wsUrl}/ws`;
+};
+
+const WS_URL = getWebSocketUrl();
 
 interface WebSocketEvent {
   type: string;
