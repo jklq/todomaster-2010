@@ -129,8 +129,9 @@ export const TaskMaster2010: React.FC = () => {
             }} 
           />
 
-          <TaskInput 
-            filter={filter} 
+          <TaskInput
+            filter={filter}
+            lists={allLists}
             onAddTask={(text, currentFilter) => {
               const tags = (text.match(/#[a-zA-Z0-9_-]+/g) || []).map(tag => tag.slice(1));
               
@@ -140,7 +141,7 @@ export const TaskMaster2010: React.FC = () => {
               }
 
               createTask.mutate({ text, filter: currentFilter, tags, listId });
-            }} 
+            }}
           />
 
           <div className="flex-1 overflow-y-auto bg-texture relative">

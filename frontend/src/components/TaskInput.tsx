@@ -1,12 +1,13 @@
 import { useRef, useState, type FormEvent } from 'react';
-import type { FilterType } from '../types';
+import type { FilterType, List } from '../types';
 
 interface TaskInputProps {
   filter: FilterType;
+  lists?: List[];
   onAddTask: (text: string, filter: FilterType) => void;
 }
 
-export function TaskInput({ filter, onAddTask }: TaskInputProps) {
+export function TaskInput({ filter, lists = [], onAddTask }: TaskInputProps) {
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -17,7 +18,21 @@ export function TaskInput({ filter, onAddTask }: TaskInputProps) {
     setInputValue('');
   };
 
-  const filterLabel = filter === 'all' ? 'Inbox' : filter;
+  const getFilterLabel = () => {
+    if (filter === 'all') {
+      return 'Inbox';
+    }
+    
+    if (filter.startsWith('list-')) {
+      const listId = parseInt(filter.replace('list-', ''), 10);
+      const list = lists.find(l => l.id === listId);
+      return list ? list.title : 'Unknown List';
+    }
+    
+    return filter;
+  };
+
+  const filterLabel = getFilterLabel();
 
   return (
     <div className="bg-[#fffef0] border-b border-[#e6e6cd] p-4 pl-6 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] z-10">
